@@ -1,0 +1,44 @@
+import '../models/unit.dart';
+
+class SpatialGrid {
+  final double cellSize;
+  final Map<int, List<Unit>> cells = {};
+
+  SpatialGrid({this.cellSize = 2.0});
+
+  void clear() {
+    cells.clear();
+  }
+
+  int _getHash(double x, double y) {
+    int ix = (x / cellSize).floor();
+    int iy = (y / cellSize).floor();
+    // Use a simple Cantor pairing function or just a bit-shifted combine
+    return ix * 31337 + iy;
+  }
+
+  void add(Unit unit) {
+    if (unit.state == UnitState.dead) return;
+    int hash = _getHash(unit.x, unit.y);
+    cells.putIfAbsent(hash, () => []).add(unit);
+  }
+
+  List<Unit> getNearby(double x, double y, double radius) {
+    List<Unit> nearby = [];
+    int minX = ((x - radius) / cellSize).floor();
+    int maxX = ((x + radius) / cellSize).floor();
+    int minY = ((y - radius) / cellSize).floor();
+    int maxY = ((y + radius) / cellSize).floor();
+
+    for (int ix = minX; ix <= maxX; ix++) {
+      for (int iy = minY; iy <= maxY; iy++) {
+        int hash = ix * 31337 + iy;
+        final cell = cells[hash];
+        if (cell != null) {
+          nearby.addAll(cell);
+        }
+      }
+    }
+    return nearby;
+  }
+}

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "civ_romans",
+    "name": "Romanos",
+    "description": "Expertos en infantería pesada e ingeniería de asedio. Su disciplina militar no tiene igual.",
+    "primaryColor": "0xFFB71C1C",
+    "emblemAssetPath": "assets/images/emblems/roman_eagle.png",
+    "bonuses": [
+      {
+        "description": "La infantería pesada tiene +15% de armadura",
+        "affectedStat": "infantry_armor",
+        "multiplier": 1.15
+      },
+      {
+        "description": "Los edificios defensivos y murallas cuestan -10% piedra",
+        "affectedStat": "defensive_building_stone_cost",
+        "multiplier": 0.90
+      }
+    ],
+    "uniqueTechnologies": ["tech_rom_testudo", "tech_rom_cohorts"],
+    "uniqueUnits": ["unit_rom_legionary", "unit_rom_centurion"],
+    "uniqueBuildings": ["bld_rom_castrum", "bld_rom_aqueduct"],
+    "availableSkinIds": ["skin_rom_imperial", "skin_rom_gladiator"]
+  },
+  {
+    "id": "civ_egyptians",
+    "name": "Egipcios",
+    "description": "Maestros del desierto y la arquitectura monumental. Excelentes en arquería y economía agrícola.",
+    "primaryColor": "0xFFF57F17",
+    "emblemAssetPath": "assets/images/emblems/egyptian_eye.png",
+    "bonuses": [
+      {
+        "description": "Los granjeros recolectan comida +20% más rápido",
+        "affectedStat": "farming_speed",
+        "multiplier": 1.20
+      },
+      {
+        "description": "Los arqueros tienen +10% de alcance",
+        "affectedStat": "archer_range",
+        "multiplier": 1.10
+      }
+    ],
+    "uniqueTechnologies": ["tech_egy_chariots", "tech_egy_papyrus"],
+    "uniqueUnits": ["unit_egy_chariot", "unit_egy_medjay"],
+    "uniqueBuildings": ["bld_egy_pyramid", "bld_egy_obelisk"],
+    "availableSkinIds": ["skin_egy_pharaoh", "skin_egy_anubis"]
+  }
+]

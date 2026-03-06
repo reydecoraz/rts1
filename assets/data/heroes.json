@@ -1,0 +1,38 @@
+[
+    {
+        "id": "hero_julius_caesar",
+        "name": "Julio César",
+        "lore": "Un brillante estratega militar y líder carismático. Bajo su mando, la legión romana alcanzó su máximo esplendor táctico.",
+        "avatarAssetPath": "assets/images/heroes/caesar.png",
+        "globalBonuses": [
+            {
+                "description": "Las tropas de asalto se crean +10% más rápido",
+                "affectedStat": "infantry_training_speed",
+                "multiplier": 1.10
+            },
+            {
+                "description": "Las formaciones reducen el daño recibido un -5%",
+                "affectedStat": "formation_damage_reduction",
+                "multiplier": 0.95
+            }
+        ]
+    },
+    {
+        "id": "hero_cleopatra",
+        "name": "Cleopatra",
+        "lore": "Última gobernante de la dinastía ptolemaica de Egipto. Su inigualable diplomacia y administración aseguraron riquezas inmensas.",
+        "avatarAssetPath": "assets/images/heroes/cleopatra.png",
+        "globalBonuses": [
+            {
+                "description": "La velocidad de investigación de tecnologías aumenta +15%",
+                "affectedStat": "research_speed",
+                "multiplier": 1.15
+            },
+            {
+                "description": "El comercio genera +10% de Oro extra",
+                "affectedStat": "trade_gold_generation",
+                "multiplier": 1.10
+            }
+        ]
+    }
+]
