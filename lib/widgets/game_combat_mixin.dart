@@ -140,12 +140,7 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
             // Ataque melee
             if (Random().nextDouble() <= unit.currentStats.accuracy) {
               int baseDamage = unit.currentStats.meleeAttack;
-              int targetArmor = unit.targetUnit!.currentStats.meleeArmor;
-              if (unit.targetUnit!.category == UnitCategory.cavalry && unit.currentStats.cavalryArmor > 0) {
-                 // Si el atacante tiene bono vs caballería, se podría sumar al daño o calcular diferente.
-              }
-              int finalDamage = max(1, baseDamage - targetArmor);
-              unit.targetUnit!.takeDamage(finalDamage);
+              unit.targetUnit!.takeDamage(baseDamage, isRanged: false);
             }
           }
         }
@@ -245,12 +240,7 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
     for (final proj in activeProjectiles$) {
       if (proj.update(dt)) {
         if (proj.targetUnit != null && proj.targetUnit!.state != UnitState.dead) {
-          // Obtener el origen del proyectil si quisieramos verificar precisión del proyectil en sí,
-          // o usar el daño que ya incluye el ataque original. Para simplificar, asumimos que si el proyectil llega,
-          // hace daño, aunque la unidad objetivo puede tener rangedArmor
-          int targetArmor = proj.targetUnit!.currentStats.rangedArmor;
-          int finalDamage = max(1, proj.damage - targetArmor);
-          proj.targetUnit!.takeDamage(finalDamage);
+          proj.targetUnit!.takeDamage(proj.damage, isRanged: true);
         }
         if (proj.targetBuilding != null && !proj.targetBuilding!.isDestroyed) {
           int finalDamage = max(1, proj.damage); // Edificios sin armor por ahora o asumiendo 0
@@ -392,6 +382,11 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
           finalStats.rangedArmor = (finalStats.rangedArmor * bonus.multiplier).round();
           finalStats.cavalryArmor = (finalStats.cavalryArmor * bonus.multiplier).round();
         }
+      }
+      
+      // Bonus específico de Romanos MVP: +15% de armadura cuerpo a cuerpo (meleeArmor)
+      if (civ.id == 'civ_romans') {
+         finalStats.meleeArmor = (finalStats.meleeArmor * 1.15).round();
       }
     }
 

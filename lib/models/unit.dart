@@ -115,8 +115,16 @@ class Unit {
   FormationGroup? formationGroup;
 
 
-  void takeDamage(int damage) {
-    currentHealth -= damage;
+  void takeDamage(int rawDamage, {bool isRanged = false}) {
+    // 1. Identificar qué armadura usar
+    int armor = isRanged ? currentStats.rangedArmor : currentStats.meleeArmor;
+    
+    // 2. Fórmula Clásica de RTS: Daño Real = Daño Bruto - Armadura
+    // Usamos 'max(1, ...)' para asegurar que los ataques siempre hagan al menos 1 de daño 
+    // y evitar tropas inmortales si la armadura es muy alta.
+    int actualDamage = max(1, rawDamage - armor);
+
+    currentHealth -= actualDamage;
     if (currentHealth <= 0) {
       currentHealth = 0;
       state = UnitState.dead;
