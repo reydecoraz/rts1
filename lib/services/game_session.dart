@@ -12,6 +12,9 @@ class GameSession extends ChangeNotifier {
   int stone = 500;
   int coal = 300;
 
+  // Player's active civilization
+  String activeCivilizationId = 'civ_romans'; // Default safe value
+
   // Population
   int currentPopulation = 0; // Units alive/training
   int maxPopulation = 10;    // Grows with houses

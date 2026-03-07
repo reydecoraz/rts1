@@ -18,6 +18,7 @@ class UnitStats {
   double attackSpeed; // Segundos entre ataques
   double attackRange;
   double aggroRange; // Distancia para detectar enemigos automáticamente
+  double accuracy; // % de acierto (ej. 1.0 = 100%, 0.8 = 80%)
 
   // Daño de área
   double splashRadius;
@@ -41,6 +42,7 @@ class UnitStats {
     this.meleeArmor = 0,
     this.rangedArmor = 0,
     this.cavalryArmor = 0,
+    this.accuracy = 1.0,
   });
 
   UnitStats copyWith({
@@ -52,6 +54,7 @@ class UnitStats {
     int? rangedArmor,
     int? cavalryArmor,
     double? aggroRange,
+    double? accuracy,
   }) {
     return UnitStats(
       maxHealth: maxHealth ?? this.maxHealth,
@@ -66,6 +69,7 @@ class UnitStats {
       meleeArmor: meleeArmor ?? this.meleeArmor,
       rangedArmor: rangedArmor ?? this.rangedArmor,
       cavalryArmor: cavalryArmor ?? this.cavalryArmor,
+      accuracy: accuracy ?? this.accuracy,
     );
   }
 }

@@ -17,10 +17,22 @@
         "multiplier": 0.90
       }
     ],
-    "uniqueTechnologies": ["tech_rom_testudo", "tech_rom_cohorts"],
-    "uniqueUnits": ["unit_rom_legionary", "unit_rom_centurion"],
-    "uniqueBuildings": ["bld_rom_castrum", "bld_rom_aqueduct"],
-    "availableSkinIds": ["skin_rom_imperial", "skin_rom_gladiator"]
+    "uniqueTechnologies": [
+      "tech_rom_testudo",
+      "tech_rom_cohorts"
+    ],
+    "uniqueUnits": [
+      "unit_rom_legionary",
+      "unit_rom_centurion"
+    ],
+    "uniqueBuildings": [
+      "bld_rom_castrum",
+      "bld_rom_aqueduct"
+    ],
+    "availableSkinIds": [
+      "skin_rom_imperial",
+      "skin_rom_gladiator"
+    ]
   },
   {
     "id": "civ_egyptians",
@@ -40,9 +52,91 @@
         "multiplier": 1.10
       }
     ],
-    "uniqueTechnologies": ["tech_egy_chariots", "tech_egy_papyrus"],
-    "uniqueUnits": ["unit_egy_chariot", "unit_egy_medjay"],
-    "uniqueBuildings": ["bld_egy_pyramid", "bld_egy_obelisk"],
-    "availableSkinIds": ["skin_egy_pharaoh", "skin_egy_anubis"]
+    "uniqueTechnologies": [
+      "tech_egy_chariots",
+      "tech_egy_papyrus"
+    ],
+    "uniqueUnits": [
+      "unit_egy_chariot",
+      "unit_egy_medjay"
+    ],
+    "uniqueBuildings": [
+      "bld_egy_pyramid",
+      "bld_egy_obelisk"
+    ],
+    "availableSkinIds": [
+      "skin_egy_pharaoh",
+      "skin_egy_anubis"
+    ]
+  },
+  {
+    "id": "civ_japanese",
+    "name": "Japoneses",
+    "description": "Fieros guerreros samurái con un ataque letal, pero armaduras ligeras.",
+    "primaryColor": "0xFFD32F2F",
+    "emblemAssetPath": "assets/images/emblems/japanese_mon.png",
+    "bonuses": [
+      {
+        "description": "Ataque cuerpo a cuerpo de infantería +15%",
+        "affectedStat": "infantry_melee_attack",
+        "multiplier": 1.15
+      },
+      {
+        "description": "Armadura cuerpo a cuerpo y a distancia de infantería -10%",
+        "affectedStat": "infantry_armor",
+        "multiplier": 0.90
+      }
+    ],
+    "uniqueTechnologies": [
+      "tech_jap_bushido",
+      "tech_jap_katana"
+    ],
+    "uniqueUnits": [
+      "unit_jap_samurai",
+      "unit_jap_ninja"
+    ],
+    "uniqueBuildings": [
+      "bld_jap_dojo",
+      "bld_jap_castle"
+    ],
+    "availableSkinIds": [
+      "skin_jap_shogun",
+      "skin_jap_ronin"
+    ]
+  },
+  {
+    "id": "civ_mayans",
+    "name": "Mayas",
+    "description": "Arqueros excepcionales de la jungla con gran precisión.",
+    "primaryColor": "0xFF388E3C",
+    "emblemAssetPath": "assets/images/emblems/mayan_glyph.png",
+    "bonuses": [
+      {
+        "description": "Ataque de arqueros +15% y Puntería +10%",
+        "affectedStat": "archer_attack_accuracy",
+        "multiplier": 1.15
+      },
+      {
+        "description": "Salud y armadura de caballería -20%",
+        "affectedStat": "cavalry_defense",
+        "multiplier": 0.80
+      }
+    ],
+    "uniqueTechnologies": [
+      "tech_may_obsidian",
+      "tech_may_plumed_archers"
+    ],
+    "uniqueUnits": [
+      "unit_may_plumed_archer",
+      "unit_may_eagle_warrior"
+    ],
+    "uniqueBuildings": [
+      "bld_may_temple",
+      "bld_may_ball_court"
+    ],
+    "availableSkinIds": [
+      "skin_may_king",
+      "skin_may_priest"
+    ]
   }
 ]

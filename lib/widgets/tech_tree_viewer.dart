@@ -5,6 +5,8 @@ import '../models/technology.dart';
 import '../data/building_data.dart';
 import '../data/technology_data.dart';
 import '../data/unit_data.dart';
+import '../services/data_manager.dart';
+import '../services/game_session.dart';
 
 class TechTreeViewer extends StatelessWidget {
   const TechTreeViewer({super.key});
@@ -184,8 +186,11 @@ class TechTreeViewer extends StatelessWidget {
   }
 
   Widget _buildEraCell(BuildContext context, BuildingTypeData building, GameEra era) {
+    final activeCivId = GameSession().activeCivilizationId;
+    
     // 1. Filtrar Unidades
-    final units = UnitData.units.where((u) => u.producedIn == building.name && u.requiredEra == era).toList();
+    var units = UnitData.units.where((u) => u.producedIn == building.name && u.requiredEra == era).toList();
+    units = units.where((u) => DataManager().isItemAllowedForCiv(u.id, activeCivId)).toList();
     
     // 2. Filtrar Tecnologías (Como no tienen 'producedIn', asignamos lógicamente según nuestra preferencia estética)
     List<Technology> techs = [];
@@ -198,6 +203,7 @@ class TechTreeViewer extends StatelessWidget {
     } else if (building.name == "Galería de Tiro") {
        techs = mockTechnologies.where((t) => t.requiredEra == era && t.id.contains("gunpowder")).toList();
     }
+    techs = techs.where((t) => DataManager().isItemAllowedForCiv(t.id, activeCivId)).toList();
     
     // Si es la Era en la que se desbloquea el edificio según el juego
     bool isBuildingIntro = false;

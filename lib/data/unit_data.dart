@@ -65,7 +65,7 @@ class UnitData {
       baseStats: UnitStats(
         maxHealth: 120, movementSpeed: 1.2,
         meleeAttack: 15, attackSpeed: 1.5, attackRange: 1.0,
-        meleeArmor: 2, rangedArmor: 1,
+        meleeArmor: 2, rangedArmor: 1, accuracy: 0.95,
       ),
       producedIn: "Cuartel",
       costFood: 60,
@@ -82,7 +82,7 @@ class UnitData {
       baseStats: UnitStats(
         maxHealth: 100, movementSpeed: 1.3,
         meleeAttack: 10, attackSpeed: 1.4, attackRange: 1.2,
-        cavalryArmor: 3,
+        cavalryArmor: 3, accuracy: 0.90,
       ),
       producedIn: "Cuartel",
       costFood: 25,
@@ -101,7 +101,7 @@ class UnitData {
       baseStats: UnitStats(
         maxHealth: 70, movementSpeed: 1.3,
         rangedAttack: 12, attackSpeed: 1.2, attackRange: 5.0,
-        meleeArmor: 0, rangedArmor: 1,
+        meleeArmor: 0, rangedArmor: 1, accuracy: 0.85,
       ),
       producedIn: "Galería de Tiro",
       costWood: 25,
@@ -120,7 +120,7 @@ class UnitData {
       baseStats: UnitStats(
         maxHealth: 200, movementSpeed: 2.0,
         meleeAttack: 20, attackSpeed: 1.8, attackRange: 1.2,
-        meleeArmor: 3, rangedArmor: 2,
+        meleeArmor: 3, rangedArmor: 2, accuracy: 0.95,
       ),
       producedIn: "Establo",
       costFood: 60,
@@ -140,7 +140,7 @@ class UnitData {
         maxHealth: 150, movementSpeed: 0.6,
         rangedAttack: 50, attackSpeed: 4.0, attackRange: 8.0,
         splashRadius: 2.0, splashDamage: 25,
-        rangedArmor: 3, meleeArmor: -1, // Débil cuerpo a cuerpo
+        rangedArmor: 3, meleeArmor: -1, accuracy: 0.70, // Débil cuerpo a cuerpo
       ),
       producedIn: "Taller de Asedio",
       costWood: 100,

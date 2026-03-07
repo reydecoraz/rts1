@@ -16,6 +16,8 @@ import 'dart:async';
 
 /// Mixin that handles all pointer/touch input and building placement.
 mixin GameInputMixin<T extends StatefulWidget> on State<T> {
+  DateTime _lastTapTime = DateTime.fromMillisecondsSinceEpoch(0);
+  (int, int)? _lastTapTile;
   // ── Abstract getters/setters provided by _GameScreenState ─────
   MapGrid get grid;
   List<Unit> get units$;
@@ -46,6 +48,7 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
   set pointerDownScreenPos$(Offset? v);
   int get nextGroupId$;
   set nextGroupId$(int v);
+  List<UnitGroup> get savedGroups$;
 
   // ── Coordinate conversion ─────────────────────────────────────
   (int, int) screenToTile(Offset local) {
@@ -271,11 +274,28 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
         }
 
         if (clicked != null) {
+          // Si hace clic en una unidad, la selecciona y limpia cualquier edificio
           selectedExistingBuilding$ = null;
           selectedUnits$..clear()..add(clicked);
-        } else if (selectedUnits$.isNotEmpty && grid.isValid(tx, ty) && grid.getTile(tx, ty).isWalkable) {
-          _moveSelectedUnitsToTile(tx, ty);
+        } else if (selectedUnits$.isNotEmpty) {
+          // Si TENEMOS unidades seleccionadas y hacemos clic en el mapa:
+          final now = DateTime.now();
+          final bool isDoubleTap = now.difference(_lastTapTime).inMilliseconds < 400 && _lastTapTile == (tx, ty);
+          _lastTapTime = now;
+          _lastTapTile = (tx, ty);
+
+          if (isDoubleTap) {
+             // Doble toque en el mapa DESELECCIONA las unidades
+             selectedUnits$.clear();
+          } else {
+             // Toque simple en el mapa con unidades seleccionadas MUEVE las unidades hacia allá.
+             // (Incluso si es recurso o edificio, se moverán hacia allá o intentaremos acción)
+             if (grid.isValid(tx, ty)) {
+                _moveSelectedUnitsToTile(tx, ty);
+             }
+          }
         } else {
+          // Si NO TENÍAMOS unidades seleccionadas, seleccionamos el edificio o el recurso
           selectedUnits$.clear();
           if (grid.isValid(tx, ty)) {
             final tile = grid.getTile(tx, ty);
@@ -302,6 +322,10 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
             final usx = (u.x - u.y) * halfW + offsetX;
             final usy = (u.x + u.y) * halfH + halfH;
             if (selRect.contains(Offset(usx, usy))) selectedUnits$.add(u);
+          }
+          if (selectedUnits$.isNotEmpty) {
+             final group = UnitGroup(id: nextGroupId$++, units: List.from(selectedUnits$));
+             savedGroups$.add(group);
           }
         }
         selectionStart$ = null;

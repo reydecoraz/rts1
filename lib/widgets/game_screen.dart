@@ -107,12 +107,19 @@ class _GameScreenState extends State<GameScreen>
   final List<UnitGroup> _savedGroups = [];
   @override
   int nextGroupId$ = 1;
+  @override
+  List<UnitGroup> get savedGroups$ => _savedGroups;
 
-  // ── Joystick ──────────────────────────────────────────────────
+  // ── Vision Optimization ───────────────────────────────────────
+  final List<MapTile> _visibleTiles = [];
+
+  // ── Joystick / Timing ─────────────────────────────────────────
   double _joystickX = 0.0;
   double _joystickY = 0.0;
   late Ticker _ticker;
   Duration _lastTick = Duration.zero;
+  double _timerAccumulator = 0.0;
+  int _matchTimerSeconds = 15 * 60; // 15 minutos
 
   // ──────────────────────────────────────────────────────────────
   @override
@@ -134,6 +141,12 @@ class _GameScreenState extends State<GameScreen>
 
   // ── Vision ────────────────────────────────────────────────────
   void _updateVision() {
+    // Reset solo los tiles que eran visibles en el frame anterior
+    for (final tile in _visibleTiles) {
+      tile.isVisible = false;
+    }
+    _visibleTiles.clear();
+
     for (final unit in units$) {
       if (unit.playerId != 0 || unit.state == UnitState.dead) continue;
       _revealArea(unit.x.round(), unit.y.round(), 5);
@@ -151,8 +164,11 @@ class _GameScreenState extends State<GameScreen>
         final nx = cx + dx, ny = cy + dy;
         if (!grid.isValid(nx, ny)) continue;
         final t = grid.getTile(nx, ny);
-        t.isVisible = true;
-        t.isExplored = true;
+        if (!t.isVisible) {
+           t.isVisible = true;
+           t.isExplored = true;
+           _visibleTiles.add(t);
+        }
       }
     }
   }
@@ -164,7 +180,24 @@ class _GameScreenState extends State<GameScreen>
     if (dt > 0.1) dt = 0.1;
     _lastTick = elapsed;
 
+    if (playerWon$ || playerLost$) return;
+
+    _timerAccumulator += dt;
+    if (_timerAccumulator >= 1.0) {
+      _timerAccumulator -= 1.0;
+      if (_matchTimerSeconds > 0) {
+        _matchTimerSeconds--;
+        if (_matchTimerSeconds <= 0) {
+          // Time up! Player loses by default if they haven't destroyed the enemy.
+          playerLost$ = true;
+          if (mounted) setState(() {});
+          return;
+        }
+      }
+    }
+
     _updateVision();
+    _checkWinLoss();
 
     final needsRepaint = runCombatTick(dt);
 
@@ -181,6 +214,26 @@ class _GameScreenState extends State<GameScreen>
     matrix.translateByDouble(dx, dy, 0.0, 1.0);
     _controller.value = matrix;
     if (mounted) setState(() {});
+  }
+
+  void _checkWinLoss() {
+    bool playerHasCenter = false;
+    bool enemyHasCenter = false;
+
+    for (final b in activeBuildings$) {
+      if (b.name == "Centro Urbano") {
+        if (b.playerId == 0) playerHasCenter = true;
+        if (b.playerId > 0) enemyHasCenter = true;
+      }
+    }
+
+    if (!playerHasCenter && activeBuildings$.isNotEmpty) {
+      playerLost$ = true;
+      if (mounted) setState(() {});
+    } else if (!enemyHasCenter && activeBuildings$.isNotEmpty) {
+      playerWon$ = true;
+      if (mounted) setState(() {});
+    }
   }
 
   void _resetGame() {
@@ -210,6 +263,8 @@ class _GameScreenState extends State<GameScreen>
       _currentEra = GameEra.stone;
       _savedGroups.clear();
       nextGroupId$ = 1;
+      _matchTimerSeconds = 15 * 60;
+      _timerAccumulator = 0.0;
 
       int? playerX;
       int? playerY;
@@ -370,7 +425,45 @@ class _GameScreenState extends State<GameScreen>
         ),
 
           // ── HUD ────────────────────────────────────────────────
-          const ResourceBar(),
+          // Game Timer and Resource Bar Display
+          Positioned(
+            top: 10,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Timer
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _matchTimerSeconds <= 60 ? Colors.red : Colors.amber, width: 1),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.timer, size: 14, color: _matchTimerSeconds <= 60 ? Colors.redAccent : Colors.amber),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${(_matchTimerSeconds ~/ 60).toString().padLeft(2, '0')}:${(_matchTimerSeconds % 60).toString().padLeft(2, '0')}",
+                        style: TextStyle(
+                          color: _matchTimerSeconds <= 60 ? Colors.redAccent : Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Resource Bar
+                const ResourceBar(),
+              ],
+            ),
+          ),
+          
           HudOverlay(
             onRefreshPressed: _resetGame,
             currentEra: _currentEra,
@@ -511,7 +604,7 @@ class _GameScreenState extends State<GameScreen>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        playerWon$ ? 'Destruiste todas las bases enemigas.' : 'Tu Centro Urbano fue destruido.',
+                        playerWon$ ? 'Destruiste el Centro Urbano enemigo.' : (_matchTimerSeconds <= 0 ? 'Se terminó el tiempo (15 min).' : 'Tu Centro Urbano fue destruido.'),
                         style: const TextStyle(color: Colors.white70, fontSize: 18),
                       ),
                       const SizedBox(height: 32),

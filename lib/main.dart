@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'widgets/game_screen.dart';
-
 import 'package:flutter/services.dart';
+import 'widgets/main_menu_screen.dart';
+import 'services/data_manager.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await DataManager().loadAllData();
+  
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  runApp(RTSApp());
+  runApp(const RTSApp());
 }
 
 class RTSApp extends StatelessWidget {
@@ -23,7 +25,7 @@ class RTSApp extends StatelessWidget {
         primarySwatch: Colors.green,
         brightness: Brightness.dark,
       ),
-      home: GameScreen(),
+      home: const MainMenuScreen(),
     );
   }
 }

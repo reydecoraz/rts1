@@ -85,4 +85,15 @@ class DataManager {
   
   List<Civilization> getAllCivilizations() => _civilizations.values.toList();
   List<HeroData> getAllHeroes() => _heroes.values.toList();
+
+  bool isItemAllowedForCiv(String itemId, String activeCivId) {
+    for (final civ in _civilizations.values) {
+      if (civ.id != activeCivId) {
+        if (civ.uniqueTechnologies.contains(itemId)) return false;
+        if (civ.uniqueUnits.contains(itemId)) return false;
+        if (civ.uniqueBuildings.contains(itemId)) return false;
+      }
+    }
+    return true;
+  }
 }

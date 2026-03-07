@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/technology.dart';
 import '../models/era.dart';
 import '../data/technology_data.dart';
+import '../services/data_manager.dart';
+import '../services/game_session.dart';
 
 class InvestigationModal extends StatefulWidget {
   final BuildContext parentContext;
@@ -115,7 +117,11 @@ class _InvestigationModalState extends State<InvestigationModal> with SingleTick
   }
 
   Widget _buildEraTechnologies(GameEra era) {
-    final techs = mockTechnologies.where((t) => t.requiredEra == era).toList();
+    final activeCivId = GameSession().activeCivilizationId;
+    final techs = mockTechnologies.where((t) => 
+      t.requiredEra == era && 
+      DataManager().isItemAllowedForCiv(t.id, activeCivId)
+    ).toList();
 
     if (techs.isEmpty) {
       return Center(

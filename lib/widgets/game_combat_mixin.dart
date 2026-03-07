@@ -9,6 +9,7 @@ import '../ai/ai_controller.dart';
 import '../services/game_session.dart';
 import '../models/map_grid.dart';
 import '../utils/spatial_grid.dart';
+import '../services/data_manager.dart';
 
 /// Mixin that implements the game loop (combat, AI, production, projectiles).
 /// It must be used on _GameScreenState-compatible classes that expose the
@@ -136,7 +137,16 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
               speed: pType == ProjectileType.cannonball ? 7.0 : 12.0,
             ));
           } else {
-            unit.targetUnit!.takeDamage(unit.currentStats.meleeAttack);
+            // Ataque melee
+            if (Random().nextDouble() <= unit.currentStats.accuracy) {
+              int baseDamage = unit.currentStats.meleeAttack;
+              int targetArmor = unit.targetUnit!.currentStats.meleeArmor;
+              if (unit.targetUnit!.category == UnitCategory.cavalry && unit.currentStats.cavalryArmor > 0) {
+                 // Si el atacante tiene bono vs caballería, se podría sumar al daño o calcular diferente.
+              }
+              int finalDamage = max(1, baseDamage - targetArmor);
+              unit.targetUnit!.takeDamage(finalDamage);
+            }
           }
         }
       } else {
@@ -235,10 +245,16 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
     for (final proj in activeProjectiles$) {
       if (proj.update(dt)) {
         if (proj.targetUnit != null && proj.targetUnit!.state != UnitState.dead) {
-          proj.targetUnit!.takeDamage(proj.damage);
+          // Obtener el origen del proyectil si quisieramos verificar precisión del proyectil en sí,
+          // o usar el daño que ya incluye el ataque original. Para simplificar, asumimos que si el proyectil llega,
+          // hace daño, aunque la unidad objetivo puede tener rangedArmor
+          int targetArmor = proj.targetUnit!.currentStats.rangedArmor;
+          int finalDamage = max(1, proj.damage - targetArmor);
+          proj.targetUnit!.takeDamage(finalDamage);
         }
         if (proj.targetBuilding != null && !proj.targetBuilding!.isDestroyed) {
-          proj.targetBuilding!.takeDamage(proj.damage.toDouble());
+          int finalDamage = max(1, proj.damage); // Edificios sin armor por ahora o asumiendo 0
+          proj.targetBuilding!.takeDamage(finalDamage.toDouble());
         }
         toRemove.add(proj);
         repaint = true;
@@ -353,6 +369,32 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
       break;
     }
 
+    // Calcular estadísticas base y modificadores de civilización
+    UnitStats finalStats = unitType.baseStats.copyWith();
+    
+    // Obtener civilización del jugador creador
+    String civId = b.playerId == 0 ? GameSession().activeCivilizationId : 'civ_romans'; // TODO para IA
+    final civ = DataManager().getCivilization(civId);
+    
+    if (civ != null) {
+      for (var bonus in civ.bonuses) {
+        if (bonus.affectedStat == 'infantry_melee_attack' && unitType.category == UnitCategory.infantry) {
+          finalStats.meleeAttack = (finalStats.meleeAttack * bonus.multiplier).round();
+        } else if (bonus.affectedStat == 'infantry_armor' && unitType.category == UnitCategory.infantry) {
+          finalStats.meleeArmor = (finalStats.meleeArmor * bonus.multiplier).round();
+          finalStats.rangedArmor = (finalStats.rangedArmor * bonus.multiplier).round();
+        } else if (bonus.affectedStat == 'archer_attack_accuracy' && unitType.category == UnitCategory.ranged) {
+          finalStats.rangedAttack = (finalStats.rangedAttack * bonus.multiplier).round();
+          finalStats.accuracy = min(1.0, finalStats.accuracy * bonus.multiplier);
+        } else if (bonus.affectedStat == 'cavalry_defense' && unitType.category == UnitCategory.cavalry) {
+          finalStats.maxHealth = (finalStats.maxHealth * bonus.multiplier).round();
+          finalStats.meleeArmor = (finalStats.meleeArmor * bonus.multiplier).round();
+          finalStats.rangedArmor = (finalStats.rangedArmor * bonus.multiplier).round();
+          finalStats.cavalryArmor = (finalStats.cavalryArmor * bonus.multiplier).round();
+        }
+      }
+    }
+
     final newUnit = Unit(
       id: '${DateTime.now().millisecondsSinceEpoch}${Random().nextInt(1000)}',
       typeId: unitType.id,
@@ -360,7 +402,7 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
       playerId: b.playerId,
       x: spawnX.toDouble(),
       y: spawnY.toDouble(),
-      currentStats: unitType.baseStats.copyWith(),
+      currentStats: finalStats,
     );
 
     if (b.rallyPointX != null && b.rallyPointY != null) {

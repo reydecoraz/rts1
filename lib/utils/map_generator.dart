@@ -110,29 +110,17 @@ class MapGenerator {
   }
 
   static void _placeBaseLocations(MapGrid grid) {
-    // Definimos 8 puntos aproximados en círculos o esquinas
+    // Definimos solo 2 puntos para partida 1v1 en esquinas opuestas
     final w = grid.width;
     final h = grid.height;
     final margin = 5;
 
     final basePoints = [
-      Point(margin, margin),
-      Point(w - margin - 1, margin),
-      Point(margin, h - margin - 1),
-      Point(w - margin - 1, h - margin - 1),
-      Point(w ~/ 2, margin),
-      Point(w ~/ 2, h - margin - 1),
-      Point(margin, h ~/ 2),
-      Point(w - margin - 1, h ~/ 2),
+      Point(margin, margin), // Jugador (Top-Left)
+      Point(w - margin - 1, h - margin - 1), // Enemigo (Bottom-Right)
     ];
 
-    // Mezclamos para que el jugador 0 aparezca en un lugar aleatorio distinto cada vez
-    basePoints.shuffle(Random());
-
-    final baseColors = [
-      Colors.blue, Colors.red, Colors.green, Colors.yellow,
-      Colors.purple, Colors.orange, Colors.cyan, Colors.pink
-    ];
+    final baseColors = [Colors.blue, Colors.red];
 
     for (int i = 0; i < basePoints.length; i++) {
       final p = basePoints[i];

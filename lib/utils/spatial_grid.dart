@@ -2,7 +2,7 @@ import '../models/unit.dart';
 
 class SpatialGrid {
   final double cellSize;
-  final Map<int, List<Unit>> cells = {};
+  final Map<String, List<Unit>> cells = {};
 
   SpatialGrid({this.cellSize = 2.0});
 
@@ -10,16 +10,15 @@ class SpatialGrid {
     cells.clear();
   }
 
-  int _getHash(double x, double y) {
+  String _getHash(double x, double y) {
     int ix = (x / cellSize).floor();
     int iy = (y / cellSize).floor();
-    // Use a simple Cantor pairing function or just a bit-shifted combine
-    return ix * 31337 + iy;
+    return "${ix}_${iy}";
   }
 
   void add(Unit unit) {
     if (unit.state == UnitState.dead) return;
-    int hash = _getHash(unit.x, unit.y);
+    String hash = _getHash(unit.x, unit.y);
     cells.putIfAbsent(hash, () => []).add(unit);
   }
 
@@ -32,7 +31,7 @@ class SpatialGrid {
 
     for (int ix = minX; ix <= maxX; ix++) {
       for (int iy = minY; iy <= maxY; iy++) {
-        int hash = ix * 31337 + iy;
+        String hash = "${ix}_${iy}";
         final cell = cells[hash];
         if (cell != null) {
           nearby.addAll(cell);

@@ -53,7 +53,7 @@ class IsometricMapPainter extends CustomPainter {
         // Niebla de Guerra
         if (!tile.isExplored) {
            _drawUnknownTile(canvas, sx, sy);
-           continue; // No dibujar nada más encima de lo inexplorado
+           continue; // No dibujar nada más encima de lo inexplorado (totalmente negro)
         }
 
         _drawTile(canvas, sx, sy, tile.biome, isHovered);
@@ -68,7 +68,7 @@ class IsometricMapPainter extends CustomPainter {
           _drawResource(canvas, sx, sy, tile.resource!.type);
         }
         
-        // Pero sólo dibujamos edificios si la zona es visible (por simplicidad ahora, o si es nuestro)
+        // Solo dibujamos edificios si la zona es visible o si el edificio nos pertenece
         if (tile.building != null) {
           if (tile.isVisible || tile.building!.playerId == 0) {
               _drawBuilding(canvas, sx, sy, tile.building!);
@@ -83,7 +83,7 @@ class IsometricMapPainter extends CustomPainter {
                     ..strokeWidth = 2
                     ..style = PaintingStyle.stroke;
 
-              final double halfH = MapConstants.tileHeight / 2;
+                 final double halfH = MapConstants.tileHeight / 2;
                  final Offset origin = Offset(sx, sy + halfH);
                  final Offset destination = Offset(targetSx, targetSy + halfH);
 
@@ -105,7 +105,11 @@ class IsometricMapPainter extends CustomPainter {
 
     // Dibujar unidades
     for (var unit in units) {
-      if (unit.playerId == 0 || grid.isValid(unit.x.toInt(), unit.y.toInt()) && grid.getTile(unit.x.toInt(), unit.y.toInt()).isVisible) {
+      if (!grid.isValid(unit.x.toInt(), unit.y.toInt())) continue;
+      final tile = grid.getTile(unit.x.toInt(), unit.y.toInt());
+      
+      // Si la unidad es del jugador 0 siempre se dibuja, si es enemiga, solo si el tile es visible.
+      if (unit.playerId == 0 || tile.isVisible) {
          _drawUnit(canvas, unit);
       }
     }
@@ -753,7 +757,11 @@ class IsometricMapPainter extends CustomPainter {
 
 
   void _drawCube(Canvas canvas, double cx, double cy, Color color, Building building) {
-    final double h = 20.0;
+    final double maxH = 20.0;
+    final double h = building.isUnderConstruction
+        ? maxH * building.constructionProgress.clamp(0.1, 1.0)
+        : maxH;
+        
     final double w = MapConstants.tileWidth / 3;
     final double ty = cy + MapConstants.tileHeight / 2;
 
@@ -786,6 +794,17 @@ class IsometricMapPainter extends CustomPainter {
     rightPath.lineTo(cx + w, ty + MapConstants.tileHeight / 4);
     rightPath.close();
     canvas.drawPath(rightPath, rightPaint);
+    
+    // Si está en construcción, dibujar andamios básicos (líneas)
+    if (building.isUnderConstruction) {
+      final scaffoldPaint = Paint()
+        ..color = Colors.brown[400]!
+        ..strokeWidth = 1.0
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(Offset(cx - w, ty + MapConstants.tileHeight / 4), Offset(cx - w, ty + MapConstants.tileHeight / 4 - maxH), scaffoldPaint);
+      canvas.drawLine(Offset(cx + w, ty + MapConstants.tileHeight / 4), Offset(cx + w, ty + MapConstants.tileHeight / 4 - maxH), scaffoldPaint);
+      canvas.drawLine(Offset(cx, ty + MapConstants.tileHeight / 2), Offset(cx, ty + MapConstants.tileHeight / 2 - maxH), scaffoldPaint);
+    }
   }
 
   void _drawWall(Canvas canvas, double cx, double cy, Color color, bool underConstruction) {
