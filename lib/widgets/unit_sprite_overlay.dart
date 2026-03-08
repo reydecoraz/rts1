@@ -118,7 +118,7 @@ class _UnitSprite extends StatelessWidget {
     if (asset.isEmpty) return const SizedBox.shrink();
 
     final double ratio = (unit.currentHealth / unit.currentStats.maxHealth).clamp(0.0, 1.0);
-    final bool showHp = unit.currentHealth < unit.currentStats.maxHealth;
+    final bool showHp = true; // Siempre mostrar para ver la reducción por armadura
 
     return Positioned(
       left: screenX - _w / 2,

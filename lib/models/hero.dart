@@ -6,12 +6,16 @@ class HeroData {
   final String lore;
   final String avatarAssetPath;
   final List<CivilizationBonus> globalBonuses;
+  final List<String> uniqueUnits;
+  final String heroUnitId;
 
   HeroData({
     required this.id,
     required this.name,
     required this.lore,
     required this.avatarAssetPath,
-    required this.globalBonuses,
+    this.globalBonuses = const [],
+    this.uniqueUnits = const [],
+    required this.heroUnitId,
   });
 }

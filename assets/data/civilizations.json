@@ -32,6 +32,11 @@
     "availableSkinIds": [
       "skin_rom_imperial",
       "skin_rom_gladiator"
+    ],
+    "availableHeroes": [
+      "hero_julius_caesar",
+      "hero_scipio",
+      "hero_agrippa"
     ]
   },
   {

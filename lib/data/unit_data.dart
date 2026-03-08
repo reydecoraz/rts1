@@ -55,6 +55,42 @@ class UnitData {
       icon: Icons.shopping_cart,
       requiredEra: GameEra.bronze,
     ),
+    
+    // --- Unidades Únicas y Héroes (Centro Urbano) ---
+    UnitTypeData(
+      id: "hero_julius_caesar_unit",
+      name: "Julio César",
+      description: "El poderoso líder romano. Alto daño, salud masiva y regeneración automática.",
+      category: UnitCategory.hero,
+      baseStats: UnitStats(
+        maxHealth: 500, movementSpeed: 1.5,
+        meleeAttack: 35, attackSpeed: 1.2, attackRange: 1.0,
+        meleeArmor: 5, rangedArmor: 5, accuracy: 1.0,
+      ),
+      producedIn: "Centro Urbano",
+      costFood: 0, // Generalmente se invoca/reaparece gratis según diseño
+      costWood: 0,
+      productionTime: 10,
+      icon: Icons.star,
+      requiredEra: GameEra.stone,
+    ),
+    UnitTypeData(
+      id: "cavalry_julio_cesar",
+      name: "Caballería de César",
+      description: "Caballería económica y fuerte exclusiva de Julio César.",
+      category: UnitCategory.cavalry,
+      baseStats: UnitStats(
+        maxHealth: 220, movementSpeed: 2.2, // Más vida y veloz
+        meleeAttack: 25, attackSpeed: 1.6, attackRange: 1.2, // Más fuerte
+        meleeArmor: 4, rangedArmor: 3, accuracy: 0.95,
+      ),
+      producedIn: "Centro Urbano",
+      costFood: 40, // Más barata
+      costGold: 50, // Más barata
+      productionTime: 20, // Más rápida
+      icon: Icons.directions_run_outlined,
+      requiredEra: GameEra.bronze,
+    ),
 
     // --- Cuartel ---
     UnitTypeData(

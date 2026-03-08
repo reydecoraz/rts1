@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../models/civilization.dart';
 import '../services/data_manager.dart';
 import '../services/game_session.dart';
+import '../models/hero.dart';
+import '../data/unit_data.dart';
 import 'game_screen.dart';
 
 class LobbyScreen extends StatefulWidget {
@@ -14,6 +16,7 @@ class LobbyScreen extends StatefulWidget {
 
 class _LobbyScreenState extends State<LobbyScreen> {
   Civilization? _selectedCiv;
+  HeroData? _selectedHero;
   int _countdown = 20;
   Timer? _timer;
 
@@ -23,6 +26,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
     final civs = DataManager().getAllCivilizations();
     if (civs.isNotEmpty) {
       _selectedCiv = civs.first;
+      _updateDefaultHero();
     }
     
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -38,6 +42,17 @@ class _LobbyScreenState extends State<LobbyScreen> {
     });
   }
 
+  void _updateDefaultHero() {
+    if (_selectedCiv != null && _selectedCiv!.availableHeroes.isNotEmpty) {
+      String heroId = _selectedCiv!.availableHeroes.contains('hero_julius_caesar') 
+          ? 'hero_julius_caesar' 
+          : _selectedCiv!.availableHeroes.first;
+      _selectedHero = DataManager().getHero(heroId);
+    } else {
+      _selectedHero = null;
+    }
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -47,6 +62,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
   void _startGame() {
     if (_selectedCiv != null) {
       GameSession().activeCivilizationId = _selectedCiv!.id;
+      GameSession().activeHeroId = _selectedHero?.id;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const GameScreen()),
@@ -70,37 +86,33 @@ class _LobbyScreenState extends State<LobbyScreen> {
         ),
         child: Center(
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.85,
-            height: MediaQuery.of(context).size.height * 0.85,
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.9,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.8),
+              color: Colors.black.withOpacity(0.85),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.amber[700]!, width: 2),
             ),
             child: Column(
               children: [
+                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
                       "SALA DE ESPERA 1v1",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     Row(
                       children: [
                         const Icon(Icons.timer, color: Colors.amber, size: 20),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 8),
                         Text(
                           "00:${_countdown.toString().padLeft(2, '0')}",
                           style: TextStyle(
-                            color: _countdown <= 5 ? Colors.redAccent : Colors.amber[400],
-                            fontSize: 20,
+                            color: _countdown <= 5 ? Colors.redAccent : Colors.amber,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -108,20 +120,20 @@ class _LobbyScreenState extends State<LobbyScreen> {
                     ),
                   ],
                 ),
-                const Divider(color: Colors.white24, height: 16, thickness: 1),
+                const Divider(color: Colors.white24, height: 32),
+                
+                // Main Layout
                 Expanded(
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Left: Civilization List
+                      // 1. Civ selection
                       Expanded(
                         flex: 2,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "SELECCIONA TU CIVILIZACIÓN",
-                              style: TextStyle(color: Colors.amber[200], fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
+                            Text("1. CIVILIZACIÓN", style: TextStyle(color: Colors.amber[200], fontSize: 12, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 8),
                             Expanded(
                               child: ListView.builder(
@@ -130,27 +142,13 @@ class _LobbyScreenState extends State<LobbyScreen> {
                                   final civ = civs[index];
                                   final isSelected = _selectedCiv?.id == civ.id;
                                   return Card(
-                                    color: isSelected ? Colors.amber[900] : Colors.blueGrey[800],
-                                    shape: RoundedRectangleBorder(
-                                      side: BorderSide(
-                                        color: isSelected ? Colors.amber[400]! : Colors.transparent,
-                                        width: 2,
-                                      ),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
+                                    color: isSelected ? Colors.blue[900] : Colors.blueGrey[800],
                                     child: ListTile(
-                                      leading: CircleAvatar(
-                                        backgroundColor: civ.primaryColor,
-                                        child: const Icon(Icons.public, color: Colors.white),
-                                      ),
-                                      title: Text(
-                                        civ.name,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                      ),
-                                      selected: isSelected,
+                                      title: Text(civ.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                       onTap: () {
                                         setState(() {
                                           _selectedCiv = civ;
+                                          _updateDefaultHero();
                                         });
                                       },
                                     ),
@@ -161,78 +159,105 @@ class _LobbyScreenState extends State<LobbyScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 24),
-                      // Right: Civilization Details
+                      const SizedBox(width: 16),
+                      
+                      // 2. Hero selection
+                      Expanded(
+                        flex: 2,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("2. HÉROE LIDER", style: TextStyle(color: Colors.amber[200], fontSize: 12, fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            if (_selectedCiv == null)
+                              const Expanded(child: Center(child: Text("Selecciona Civ", style: TextStyle(color: Colors.white54))))
+                            else
+                              Expanded(
+                                child: ListView.builder(
+                                  itemCount: _selectedCiv!.availableHeroes.length,
+                                  itemBuilder: (context, index) {
+                                    final heroId = _selectedCiv!.availableHeroes[index];
+                                    final hero = DataManager().getHero(heroId);
+                                    if (hero == null) return const SizedBox.shrink();
+
+                                    final isOwned = hero.id == 'hero_julius_caesar';
+                                    final isSelected = _selectedHero?.id == hero.id;
+
+                                    return Card(
+                                      color: !isOwned ? Colors.grey[800] : (isSelected ? Colors.amber[900] : Colors.blueGrey[800]),
+                                      child: ListTile(
+                                        leading: Icon(isOwned ? Icons.star : Icons.lock, color: isOwned ? Colors.amber : Colors.white24),
+                                        title: Text(hero.name, style: TextStyle(color: isOwned ? Colors.white : Colors.white24, fontWeight: FontWeight.bold)),
+                                        onTap: isOwned ? () {
+                                          setState(() => _selectedHero = hero);
+                                        } : null,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+
+                      // 3. Details
                       Expanded(
                         flex: 3,
                         child: _selectedCiv == null
-                            ? const Center(child: Text("Selecciona una civilización", style: TextStyle(color: Colors.white)))
+                            ? const Center(child: Text("Selecciona para ver detalles", style: TextStyle(color: Colors.white54)))
                             : Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: Colors.black45,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.white24),
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundColor: _selectedCiv!.primaryColor,
-                                          child: const Icon(Icons.shield, color: Colors.white, size: 20),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            _selectedCiv!.name,
-                                            style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(_selectedCiv!.name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 8),
+                                      Text(_selectedCiv!.description, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                                      const SizedBox(height: 16),
+                                      const Text("Bonos de Civilización:", style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold)),
+                                      ..._selectedCiv!.bonuses.map((b) => Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text("• ${b.description}", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                                      )),
+                                      if (_selectedHero != null) ...[
+                                        const SizedBox(height: 16),
+                                        const Divider(color: Colors.white24),
+                                        const SizedBox(height: 8),
+                                        Text(_selectedHero!.name, style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 4),
+                                        Text(_selectedHero!.lore, style: const TextStyle(color: Colors.white60, fontSize: 11, fontStyle: FontStyle.italic)),
+                                        const SizedBox(height: 12),
+                                        const Text("Bonos de Héroe:", style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold)),
+                                        ..._selectedHero!.globalBonuses.map((b) => Padding(
+                                          padding: const EdgeInsets.only(top: 4),
+                                          child: Text("• ${b.description}", style: const TextStyle(color: Colors.white, fontSize: 11)),
+                                        )),
+                                        if (_selectedHero!.uniqueUnits.isNotEmpty)
+                                          const Padding(
+                                            padding: EdgeInsets.only(top: 8),
+                                            child: Text("★ Unidad Única desbloqueada", style: TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                                           ),
-                                        ),
                                       ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _selectedCiv!.description,
-                                      style: const TextStyle(color: Colors.white70, fontSize: 12),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    const Text(
-                                      "Bonificaciones:",
-                                      style: TextStyle(color: Colors.amber, fontSize: 14, fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    ..._selectedCiv!.bonuses.map((b) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 4.0),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Icon(Icons.star, color: Colors.amber, size: 14),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              b.description,
-                                              style: const TextStyle(color: Colors.white, fontSize: 12),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    )),
-                                    const Spacer(),
-                                    const Center(
-                                      child: Text(
-                                        "La partida iniciará automáticamente...",
-                                        style: TextStyle(color: Colors.white54, fontStyle: FontStyle.italic, fontSize: 10),
-                                      ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                       ),
                     ],
                   ),
+                ),
+                
+                // Footer
+                const SizedBox(height: 16),
+                const Text(
+                  "La partida iniciará automáticamente...",
+                  style: TextStyle(color: Colors.white38, fontSize: 10, fontStyle: FontStyle.italic),
                 ),
               ],
             ),

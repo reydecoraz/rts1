@@ -27,7 +27,8 @@ class ResourceSystem {
 
   void _addResourceToPlayer(int playerId, ResourceType type, int amount) {
     if (playerId == 0) {
-      session.addResource(type, amount);
+      final int modAmount = (amount * session.gatheringSpeedModifier).round();
+      session.addResource(type, modAmount);
     } else {
       final ai = aiControllers.where((a) => a.playerId == playerId).firstOrNull;
       ai?.addResources(type, amount);

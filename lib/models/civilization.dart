@@ -27,6 +27,7 @@ class Civilization {
   final List<String> uniqueUnits;
   final List<String> uniqueBuildings;
   final List<String> availableSkinIds;
+  final List<String> availableHeroes;
 
   Civilization({
     required this.id,
@@ -39,5 +40,6 @@ class Civilization {
     this.uniqueUnits = const [],
     this.uniqueBuildings = const [],
     this.availableSkinIds = const [],
+    this.availableHeroes = const [],
   });
 }

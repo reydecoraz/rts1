@@ -13,6 +13,11 @@ class UnitGroup {
 
   bool get isEmpty => aliveUnits.isEmpty;
 
+  /// Removes units from this group (e.g. they joined another group).
+  void removeUnits(List<Unit> unitsToRemove) {
+    units.removeWhere((u) => unitsToRemove.contains(u));
+  }
+
   /// Counts units by typeId category
   Map<String, int> get composition {
     final map = <String, int>{};

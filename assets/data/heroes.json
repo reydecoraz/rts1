@@ -6,33 +6,54 @@
         "avatarAssetPath": "assets/images/heroes/caesar.png",
         "globalBonuses": [
             {
-                "description": "Las tropas de asalto se crean +10% más rápido",
-                "affectedStat": "infantry_training_speed",
+                "description": "Las tropas se crean un 10% más lento",
+                "affectedStat": "training_speed",
                 "multiplier": 1.10
             },
             {
-                "description": "Las formaciones reducen el daño recibido un -5%",
-                "affectedStat": "formation_damage_reduction",
-                "multiplier": 0.95
+                "description": "El costo de las unidades se reduce un 15%",
+                "affectedStat": "unit_cost",
+                "multiplier": 0.85
+            },
+            {
+                "description": "Los recolectores trabajan +10% más rápido",
+                "affectedStat": "gathering_speed",
+                "multiplier": 1.10
             }
-        ]
+        ],
+        "uniqueUnits": [
+            "cavalry_julio_cesar"
+        ],
+        "heroUnitId": "hero_julius_caesar_unit"
     },
     {
-        "id": "hero_cleopatra",
-        "name": "Cleopatra",
-        "lore": "Última gobernante de la dinastía ptolemaica de Egipto. Su inigualable diplomacia y administración aseguraron riquezas inmensas.",
-        "avatarAssetPath": "assets/images/heroes/cleopatra.png",
+        "id": "hero_scipio",
+        "name": "Escipión el Africano",
+        "lore": "Héroe de la Segunda Guerra Púnica, famoso por su victoria en Zama.",
+        "avatarAssetPath": "assets/images/heroes/scipio.png",
         "globalBonuses": [
             {
-                "description": "La velocidad de investigación de tecnologías aumenta +15%",
-                "affectedStat": "research_speed",
-                "multiplier": 1.15
-            },
-            {
-                "description": "El comercio genera +10% de Oro extra",
-                "affectedStat": "trade_gold_generation",
-                "multiplier": 1.10
+                "description": "Ataque de caballería +20%",
+                "affectedStat": "cavalry_attack",
+                "multiplier": 1.20
             }
-        ]
+        ],
+        "uniqueUnits": [],
+        "heroUnitId": "hero_scipio_unit"
+    },
+    {
+        "id": "hero_agrippa",
+        "name": "Marco Vipsanio Agripa",
+        "lore": "Leal arquitecto y general naval, clave en la formación del Imperio Romano.",
+        "avatarAssetPath": "assets/images/heroes/agrippa.png",
+        "globalBonuses": [
+            {
+                "description": "Velocidad de barcos +25%",
+                "affectedStat": "ship_speed",
+                "multiplier": 1.25
+            }
+        ],
+        "uniqueUnits": [],
+        "heroUnitId": "hero_agrippa_unit"
     }
 ]

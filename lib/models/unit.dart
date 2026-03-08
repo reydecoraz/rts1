@@ -5,7 +5,7 @@ import 'formation.dart';
 import 'building.dart';
 import '../utils/spatial_grid.dart';
 
-enum UnitCategory { infantry, ranged, cavalry, siege, worker, special }
+enum UnitCategory { infantry, ranged, cavalry, siege, worker, special, hero }
 enum UnitState { idle, moving, attacking, dead }
 
 class UnitStats {
@@ -131,8 +131,22 @@ class Unit {
     }
   }
 
+  double _regenAccumulator = 0.0;
+  double visualTime = 0.0;
+
   void update(double dt, List<Unit> allUnits, MapGrid grid, {SpatialGrid? spatialGrid}) {
     if (state == UnitState.dead) return;
+    visualTime += dt;
+
+    if (category == UnitCategory.hero && currentHealth > 0 && currentHealth < currentStats.maxHealth) {
+      _regenAccumulator += (currentStats.maxHealth * 0.02) * dt; // 2% HP per second
+      if (_regenAccumulator >= 1.0) {
+        int healAmt = _regenAccumulator.floor();
+        currentHealth += healAmt;
+        if (currentHealth > currentStats.maxHealth) currentHealth = currentStats.maxHealth;
+        _regenAccumulator -= healAmt;
+      }
+    }
 
     if (attackCooldown > 0) {
       attackCooldown -= dt;
@@ -165,8 +179,9 @@ class Unit {
       double dx = nextTarget.dx - x;
       double dy = nextTarget.dy - y;
       double distance = sqrt(dx * dx + dy * dy);
+      double moveStep = currentStats.movementSpeed * dt;
 
-      if (distance < 0.1) {
+      if (distance < moveStep || distance < 0.05) {
         x = nextTarget.dx;
         y = nextTarget.dy;
         currentPath.removeAt(0);

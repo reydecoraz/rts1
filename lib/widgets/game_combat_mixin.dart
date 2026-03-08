@@ -29,6 +29,8 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
   set playerWon$(bool v);
   bool get playerLost$;
   set playerLost$(bool v);
+  double get heroRespawnTimer$;
+  set heroRespawnTimer$(double v);
  
   // ── Performance optimization state ──────
   final SpatialGrid _spatialGrid = SpatialGrid(cellSize: 3.0);
@@ -76,7 +78,49 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
     _checkWinLoss();
     needsRepaint |= _tickProduction(dt);
 
+    if (heroRespawnTimer$ > 0) {
+      heroRespawnTimer$ -= dt;
+      if (heroRespawnTimer$ <= 0) {
+        heroRespawnTimer$ = 0;
+        _respawnHero();
+        needsRepaint = true;
+      }
+    }
+
     return needsRepaint;
+  }
+
+  void _respawnHero() {
+    final session = GameSession();
+    if (session.activeHeroId == null) return;
+    final heroData = DataManager().getHero(session.activeHeroId!);
+    if (heroData == null || heroData.heroUnitId.isEmpty) return;
+    final heroUnitType = UnitData.units.where((u) => u.id == heroData.heroUnitId).firstOrNull;
+    if (heroUnitType == null) return;
+
+    final tc = activeBuildings$.where((b) => b.playerId == 0 && b.name == 'Centro Urbano').firstOrNull;
+    if (tc == null) return;
+
+    bool spawned = false;
+    for (int r = 1; r <= 3 && !spawned; r++) {
+      for (int dx = -r; dx <= r && !spawned; dx++) {
+        for (int dy = -r; dy <= r && !spawned; dy++) {
+          final tx = tc.x + dx, ty = tc.y + dy;
+          if (grid.isValid(tx, ty) && grid.getTile(tx, ty).isWalkable && grid.getTile(tx, ty).building == null) {
+            units$.add(Unit(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              typeId: heroUnitType.id,
+              category: heroUnitType.category,
+              x: tx.toDouble(),
+              y: ty.toDouble(),
+              playerId: 0,
+              currentStats: heroUnitType.baseStats,
+            ));
+            spawned = true;
+          }
+        }
+      }
+    }
   }
 
   // ── Unit combat (targeting + attacking) ──────────────────────
@@ -273,6 +317,9 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
 
   bool _cleanupDeadUnits() {
     final dying = units$.where((u) => u.state == UnitState.dead && u.playerId == 0).toList();
+    for (final u in dying) {
+      if (u.category == UnitCategory.hero) heroRespawnTimer$ = 10.0;
+    }
     if (dying.isNotEmpty) GameSession().releasePopulation(dying.length);
     final before = units$.length;
     units$.removeWhere((u) => u.state == UnitState.dead);
@@ -320,7 +367,8 @@ mixin GameCombatMixin<T extends StatefulWidget> on State<T> {
       // Unit production
       if (b.productionQueue.isNotEmpty) {
         final unitType = UnitData.units.firstWhere((u) => u.id == b.productionQueue.first);
-        b.currentProductionProgress += dt / unitType.productionTime;
+        final double mod = b.playerId == 0 ? GameSession().trainingSpeedModifier : 1.0;
+        b.currentProductionProgress += dt / (unitType.productionTime * mod);
         if (b.currentProductionProgress >= 1.0) {
           b.currentProductionProgress = 0.0;
           b.productionQueue.removeAt(0);

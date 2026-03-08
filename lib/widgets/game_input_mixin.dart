@@ -7,6 +7,7 @@ import '../models/formation.dart';
 import '../models/map_grid.dart';
 import '../models/resource.dart';
 import '../models/resource_type.dart';
+import '../models/unit_group.dart';
 import '../data/building_data.dart';
 import '../data/unit_data.dart';
 import '../utils/constants.dart';
@@ -49,6 +50,8 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
   int get nextGroupId$;
   set nextGroupId$(int v);
   List<UnitGroup> get savedGroups$;
+  double get heroRespawnTimer$;
+  set heroRespawnTimer$(double v);
 
   // ── Coordinate conversion ─────────────────────────────────────
   (int, int) screenToTile(Offset local) {
@@ -324,7 +327,21 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
             if (selRect.contains(Offset(usx, usy))) selectedUnits$.add(u);
           }
           if (selectedUnits$.isNotEmpty) {
-             final group = UnitGroup(id: nextGroupId$++, units: List.from(selectedUnits$));
+             // 1. Exclusive Membership: Remove these units from any existing groups
+             final List<Unit> newSelection = List.from(selectedUnits$);
+             for (final g in savedGroups$) {
+               g.removeUnits(newSelection);
+             }
+             
+             // 2. Auto-Cleanup: Remove groups that are now empty
+             savedGroups$.removeWhere((g) => g.isEmpty);
+
+             // 3. Create and Add the new group
+             final group = UnitGroup(
+               id: nextGroupId$++, 
+               name: 'Grupo ${nextGroupId$ - 1}', 
+               units: newSelection,
+             );
              savedGroups$.add(group);
           }
         }
@@ -428,7 +445,14 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
       ));
       return;
     }
-    if (!session.canAfford(f: unitData.costFood, w: unitData.costWood, g: unitData.costGold, s: unitData.costStone, c: unitData.costCoal)) {
+    final costMod = session.unitCostModifier;
+    final int f = (unitData.costFood * costMod).round();
+    final int w = (unitData.costWood * costMod).round();
+    final int g = (unitData.costGold * costMod).round();
+    final int s = (unitData.costStone * costMod).round();
+    final int c = (unitData.costCoal * costMod).round();
+
+    if (!session.canAfford(f: f, w: w, g: g, s: s, c: c)) {
       session.releasePopulation(unitData.populationCost);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Sin recursos para entrenar ${unitData.name}.'),
@@ -437,7 +461,7 @@ mixin GameInputMixin<T extends StatefulWidget> on State<T> {
       ));
       return;
     }
-    session.spendResources(f: unitData.costFood, w: unitData.costWood, g: unitData.costGold, s: unitData.costStone, c: unitData.costCoal);
+    session.spendResources(f: f, w: w, g: g, s: s, c: c);
     setState(() {
       building.productionQueue = List.from(building.productionQueue)..add(unitData.id);
       building.currentProductionProgress = 0.0;

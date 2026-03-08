@@ -404,8 +404,12 @@ class IsometricMapPainter extends CustomPainter {
 
   // ─── Dispatch ──────────────────────────────────────────
   void _drawUnit(Canvas canvas, Unit unit) {
+    final double bob = (unit.state == UnitState.moving) 
+        ? sin(unit.visualTime * 12) * 2.0 
+        : 0.0;
+        
     final sx = _screenX(unit.x, unit.y);
-    final sy = _screenY(unit.x, unit.y) + MapConstants.tileHeight / 2.5;
+    final sy = _screenY(unit.x, unit.y) + MapConstants.tileHeight / 2.5 + bob;
 
     final isSelected = selectedUnits.contains(unit);
     if (isSelected) {
@@ -440,12 +444,10 @@ class IsometricMapPainter extends CustomPainter {
         _drawWarrior(canvas, sx, sy, playerColor, shadowColor);
     }
 
-    // Barra de vida
-    if (unit.currentHealth < unit.currentStats.maxHealth) {
-      double healthRatio = unit.currentHealth / unit.currentStats.maxHealth;
-      canvas.drawRect(Rect.fromLTWH(sx - 8, sy - 28, 16, 3), Paint()..color = Colors.red);
-      canvas.drawRect(Rect.fromLTWH(sx - 8, sy - 28, 16 * healthRatio, 3), Paint()..color = Colors.green);
-    }
+    // Barra de vida (siempre visible)
+    double healthRatio = (unit.currentHealth / unit.currentStats.maxHealth).clamp(0.0, 1.0);
+    canvas.drawRect(Rect.fromLTWH(sx - 8, sy - 28, 16, 3), Paint()..color = Colors.red);
+    canvas.drawRect(Rect.fromLTWH(sx - 8, sy - 28, 16 * healthRatio, 3), Paint()..color = Colors.green);
   }
 
   void _drawRallyPoint(Canvas canvas) {

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/resource_type.dart';
+import 'data_manager.dart';
 
 class GameSession extends ChangeNotifier {
   static final GameSession _instance = GameSession._internal();
@@ -12,8 +13,39 @@ class GameSession extends ChangeNotifier {
   int stone = 500;
   int coal = 300;
 
-  // Player's active civilization
+  // Player's active civilization and hero
   String activeCivilizationId = 'civ_romans'; // Default safe value
+  String? activeHeroId;
+
+  double get trainingSpeedModifier {
+    if (activeHeroId == null) return 1.0;
+    final hero = DataManager().getHero(activeHeroId!);
+    if (hero == null) return 1.0;
+    for (var b in hero.globalBonuses) {
+      if (b.affectedStat == 'training_speed') return b.multiplier;
+    }
+    return 1.0;
+  }
+
+  double get unitCostModifier {
+    if (activeHeroId == null) return 1.0;
+    final hero = DataManager().getHero(activeHeroId!);
+    if (hero == null) return 1.0;
+    for (var b in hero.globalBonuses) {
+      if (b.affectedStat == 'unit_cost') return b.multiplier;
+    }
+    return 1.0;
+  }
+
+  double get gatheringSpeedModifier {
+    if (activeHeroId == null) return 1.0;
+    final hero = DataManager().getHero(activeHeroId!);
+    if (hero == null) return 1.0;
+    for (var b in hero.globalBonuses) {
+      if (b.affectedStat == 'gathering_speed') return b.multiplier;
+    }
+    return 1.0;
+  }
 
   // Population
   int currentPopulation = 0; // Units alive/training

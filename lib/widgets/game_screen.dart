@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import '../models/tile.dart';
 import '../models/map_grid.dart';
 import '../utils/map_generator.dart';
 import '../utils/constants.dart';
@@ -11,6 +12,8 @@ import 'fan_menu.dart';
 import 'construction_modal.dart';
 import 'building_info_panel.dart';
 import 'hud_overlay.dart';
+import '../services/data_manager.dart';
+import '../data/unit_data.dart';
 import 'placement_banner.dart';
 import 'virtual_joystick_overlay.dart';
 import 'resource_bar.dart';
@@ -108,10 +111,12 @@ class _GameScreenState extends State<GameScreen>
   @override
   int nextGroupId$ = 1;
   @override
+  double heroRespawnTimer$ = 0.0;
+  @override
   List<UnitGroup> get savedGroups$ => _savedGroups;
 
   // ── Vision Optimization ───────────────────────────────────────
-  final List<MapTile> _visibleTiles = [];
+  final List<Tile> _visibleTiles = [];
 
   // ── Joystick / Timing ─────────────────────────────────────────
   double _joystickX = 0.0;
@@ -207,7 +212,7 @@ class _GameScreenState extends State<GameScreen>
     }
 
     final double scale = _controller.value.getMaxScaleOnAxis();
-    final double speed = 15.0 / scale;
+    final double speed = 35.0 / scale; // increased speed
     final double dx = -_joystickX * speed;
     final double dy = -_joystickY * speed;
     final Matrix4 matrix = _controller.value;
@@ -241,6 +246,23 @@ class _GameScreenState extends State<GameScreen>
     _generateNewMap();
   }
 
+  void _centerCameraOnPosition(double gridX, double gridY) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final double worldOriginX = (grid.width * MapConstants.tileWidth) / 2.0;
+      final double worldX = (gridX - gridY) * (MapConstants.tileWidth / 2) + worldOriginX;
+      final double worldY = (gridX + gridY) * (MapConstants.tileHeight / 2) + (MapConstants.tileHeight / 2);
+      
+      final double screenW = MediaQuery.sizeOf(context).width;
+      final double screenH = MediaQuery.sizeOf(context).height;
+      
+      final double tx = -worldX + (screenW / 2);
+      final double ty = -worldY + (screenH / 2);
+      
+      _controller.value = Matrix4.identity()..translate(tx, ty);
+    });
+  }
+
   // ── Map generation ────────────────────────────────────────────
   void _generateNewMap() {
     setState(() {
@@ -263,6 +285,7 @@ class _GameScreenState extends State<GameScreen>
       _currentEra = GameEra.stone;
       _savedGroups.clear();
       nextGroupId$ = 1;
+      heroRespawnTimer$ = 0.0;
       _matchTimerSeconds = 15 * 60;
       _timerAccumulator = 0.0;
 
@@ -338,24 +361,50 @@ class _GameScreenState extends State<GameScreen>
         }
       }
 
+      // --- Spawn Hero if active ---
+      if (playerX != null && playerY != null) {
+        final session = GameSession();
+        if (session.activeHeroId != null) {
+          final heroData = DataManager().getHero(session.activeHeroId!);
+          if (heroData != null && heroData.heroUnitId.isNotEmpty) {
+            final heroUnitType = UnitData.units.where((u) => u.id == heroData.heroUnitId).firstOrNull;
+            if (heroUnitType != null) {
+              int spawnX = playerX!;
+              int spawnY = playerY!;
+              for (int r = 1; r <= 3; r++) {
+                bool found = false;
+                for (int dx = -r; dx <= r; dx++) {
+                  for (int dy = -r; dy <= r; dy++) {
+                    final tx = spawnX + dx, ty = spawnY + dy;
+                    if (grid.isValid(tx, ty) && grid.getTile(tx, ty).isWalkable && grid.getTile(tx, ty).building == null) {
+                      units$.add(Unit(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        typeId: heroUnitType.id,
+                        category: heroUnitType.category,
+                        x: tx.toDouble(),
+                        y: ty.toDouble(),
+                        playerId: 0,
+                        currentStats: heroUnitType.baseStats,
+                      ));
+                      found = true;
+                      break;
+                    }
+                  }
+                  if (found) break;
+                }
+                if (found) break;
+              }
+            }
+          }
+        }
+      }
+
       // Reveal starting area around player base and center camera
       if (playerX != null && playerY != null) {
         _revealArea(playerX, playerY, 8);
         
         // Center camera on player center (Isometric coordinates)
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final double worldOriginX = (grid.width * MapConstants.tileWidth) / 2.0;
-          final double worldX = (playerX! - playerY!) * (MapConstants.tileWidth / 2) + worldOriginX;
-          final double worldY = (playerX! + playerY!) * (MapConstants.tileHeight / 2) + (MapConstants.tileHeight / 2);
-          
-          final double screenW = MediaQuery.of(context).size.width;
-          final double screenH = MediaQuery.of(context).size.height;
-          
-          final double tx = -worldX + (screenW / 2);
-          final double ty = -worldY + (screenH / 2);
-          
-          _controller.value = Matrix4.identity()..translate(tx, ty);
-        });
+        _centerCameraOnPosition(playerX!.toDouble(), playerY!.toDouble());
       }
     });
     _resourceSystem.start(grid, aiControllers$);
@@ -399,22 +448,10 @@ class _GameScreenState extends State<GameScreen>
                         selectionStart: selectionStart$,
                         selectionEnd: selectionEnd$,
                         selectedBuilding: selectedExistingBuilding$,
-                        units: units$.where((u) =>
-                          u.category != UnitCategory.infantry &&
-                          u.category != UnitCategory.worker
-                        ).toList(),
+                        units: units$.where((u) => u.state != UnitState.dead).toList(),
                         selectedUnits: selectedUnits$,
                         projectiles: activeProjectiles$,
                         wallPreviewTiles: wallPreviewTiles$,
-                      ),
-                    ),
-                    SizedBox(
-                      width: MapConstants.gridSize * MapConstants.tileWidth,
-                      height: MapConstants.gridSize * MapConstants.tileHeight,
-                      child: InfantryUnitOverlay(
-                        units: units$,
-                        selectedUnits: selectedUnits$,
-                        grid: grid,
                       ),
                     ),
                   ],
@@ -466,7 +503,6 @@ class _GameScreenState extends State<GameScreen>
           
           HudOverlay(
             onRefreshPressed: _resetGame,
-            currentEra: _currentEra,
           ),
 
           if (isPlacementMode$ && selectedBuilding$ != null)
@@ -505,6 +541,18 @@ class _GameScreenState extends State<GameScreen>
                       setState(() {
                         selectedUnits$..clear()..addAll(g.aliveUnits);
                         selectedExistingBuilding$ = null;
+                        
+                        // Focus camera on the group's average position
+                        if (g.aliveUnits.isNotEmpty) {
+                          double avgX = 0, avgY = 0;
+                          for (final u in g.aliveUnits) {
+                            avgX += u.x;
+                            avgY += u.y;
+                          }
+                          avgX /= g.aliveUnits.length;
+                          avgY /= g.aliveUnits.length;
+                          _centerCameraOnPosition(avgX, avgY);
+                        }
                       });
                     },
                     onDeleteGroup: (g) => setState(() => _savedGroups.remove(g)),

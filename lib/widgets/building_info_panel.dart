@@ -8,6 +8,7 @@ import '../data/building_data.dart';
 import '../models/technology.dart';
 import '../data/technology_data.dart';
 import '../services/game_session.dart';
+import '../services/data_manager.dart';
 import '../models/resource_type.dart';
 
 class BuildingInfoPanel extends StatefulWidget {
@@ -298,8 +299,20 @@ class _BuildingInfoPanelState extends State<BuildingInfoPanel> {
     );
   }
   List<Widget> _buildInlineProductionItems() {
-    final List<UnitTypeData> units = UnitData.units.where((u) => u.producedIn == widget.building.name).toList();
     final session = GameSession();
+    final List<UnitTypeData> units = UnitData.units.where((u) => u.producedIn == widget.building.name).toList();
+
+    if (widget.building.name == "Centro Urbano" && session.activeHeroId != null) {
+      final hero = DataManager().getHero(session.activeHeroId!);
+      if (hero != null) {
+        for (var uniqueId in hero.uniqueUnits) {
+          final uData = UnitData.units.where((u) => u.id == uniqueId).firstOrNull;
+          if (uData != null && !units.contains(uData)) {
+            units.add(uData);
+          }
+        }
+      }
+    }
 
     return units.map((unit) {
       final bool isLocked = widget.currentEra.level < unit.requiredEra.level;

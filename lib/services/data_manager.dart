@@ -46,6 +46,7 @@ class DataManager {
           uniqueUnits: List<String>.from(json['uniqueUnits'] ?? []),
           uniqueBuildings: List<String>.from(json['uniqueBuildings'] ?? []),
           availableSkinIds: List<String>.from(json['availableSkinIds'] ?? []),
+          availableHeroes: List<String>.from(json['availableHeroes'] ?? []),
         );
         _civilizations[civ.id] = civ;
       }
@@ -72,6 +73,8 @@ class DataManager {
           lore: json['lore'],
           avatarAssetPath: json['avatarAssetPath'],
           globalBonuses: bonuses,
+          uniqueUnits: List<String>.from(json['uniqueUnits'] ?? []),
+          heroUnitId: json['heroUnitId'] ?? '',
         );
         _heroes[hero.id] = hero;
       }
